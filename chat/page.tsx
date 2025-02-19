@@ -14,6 +14,7 @@ export default function ChatPage() {
   const [fallingWords, setFallingWords] = useState([]);
   const [groundWords, setGroundWords] = useState([]);
 
+  // ✅ Corrección: Un solo useEffect bien estructurado
   useEffect(() => {
     const interval = setInterval(() => {
       const newWord = {
@@ -22,7 +23,7 @@ export default function ChatPage() {
         x: Math.random() < 0.5 ? Math.random() * 20 + 5 : Math.random() * 20 + 75,
         y: 0,
         rotation: Math.random() * 360,
-        fontSize: Math.random() * 13 + 10,  // Palabras más compactas
+        fontSize: Math.random() * 13 + 10,  
         opacity: 1,
         color: ["#FFFFFF", "#FFD700", "#FFA500", "#FF69B4", "#90EE90", "#87CEEB"][Math.floor(Math.random() * 6)],
         fontFamily: ["Arial", "Verdana", "Courier", "Georgia", "Times New Roman"][Math.floor(Math.random() * 5)]
@@ -32,19 +33,18 @@ export default function ChatPage() {
 
       setTimeout(() => {
         setFallingWords((prevWords) => prevWords.filter(word => word.id !== newWord.id));
-
         setGroundWords((prevWords) => {
-          const newHeight = prevWords.length * 5; // **Interlineado más compacto**
-          return newHeight < 600 // **Límite para no bloquear el título**
+          const newHeight = prevWords.length * 5; 
+          return newHeight < 600  
             ? [...prevWords, { ...newWord, y: newHeight }]
             : prevWords;
         });
       }, 4000);
+      
+    }, 1000); // ✅ Intervalo de generación de palabras cada 1 segundo
 
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval); // ✅ Limpieza del intervalo
+  }, [wordsList]);  // ✅ Se ejecuta cuando cambia wordsList
 
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 overflow-hidden">
@@ -122,48 +122,6 @@ export default function ChatPage() {
             Enviar
           </button>
         </div>
-      </div>
-
-      {/* Botones Flotantes Neón */}
-      <div className="absolute bottom-5 flex gap-4">
-        <motion.button
-          className="px-6 py-3 text-white font-bold text-lg rounded-md transition-all"
-          style={{
-            background: "rgba(0, 255, 255, 0.2)",
-            border: "2px solid cyan",
-            boxShadow: "0 0 10px cyan"
-          }}
-          whileHover={{ scale: 1.1, boxShadow: "0 0 20px cyan" }}
-          onClick={() => window.location.href = "/"}
-        >
-          Home
-        </motion.button>
-
-        <motion.button
-          className="px-6 py-3 text-white font-bold text-lg rounded-md transition-all"
-          style={{
-            background: "rgba(50, 205, 50, 0.2)",
-            border: "2px solid lime",
-            boxShadow: "0 0 10px lime"
-          }}
-          whileHover={{ scale: 1.1, boxShadow: "0 0 20px lime" }}
-          onClick={() => window.location.href = "/image"}
-        >
-          Generador de Imágenes
-        </motion.button>
-
-        <motion.button
-          className="px-6 py-3 text-white font-bold text-lg rounded-md transition-all"
-          style={{
-            background: "rgba(255, 69, 0, 0.2)",
-            border: "2px solid red",
-            boxShadow: "0 0 10px red"
-          }}
-          whileHover={{ scale: 1.1, boxShadow: "0 0 20px red" }}
-          onClick={() => window.location.href = "/video"}
-        >
-          Generador de Video
-        </motion.button>
       </div>
     </div>
   );
