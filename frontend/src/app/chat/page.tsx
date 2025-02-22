@@ -1,49 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+// ✅ Define la interfaz para las palabras
+interface Word {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+  rotation: number;
+  fontSize: number;
+  opacity: number;
+  color: string;
+  fontFamily: string;
+}
+
+// ✅ Mueve wordsList fuera del componente
+const wordsList: string[] = [
+  "AI", "Innovación", "Creatividad", "ChatBot", "Conversación", "Inteligencia", "Futuro", "Neural", "Lenguaje",
+  "Prompt", "Deep Learning", "こんにちは", "你好", "مرحبا", "Привет", "Bonjour", "Ciao",
+  "Hola", "Hallo", "Olá", "नमस्ते", "안녕하세요", "שלום", "Selam", "Hej", "Merhaba", "Sawubona",
+  "Tēnā koe", "வணக்கம்", "Kaixo", "سلام", "ਸਤ ਸ੍ਰੀ ਅਕਾਲ", "Χαίρετε"
+];
+
 export default function ChatPage() {
-  const [userInput, setUserInput] = useState('');
+  // ✅ Especificamos el tipo del estado de fallingWords y groundWords
+  const [fallingWords, setFallingWords] = useState<Word[]>([]);
+  const [groundWords, setGroundWords] = useState<Word[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newWord: Word = {
+        id: Math.random(),
+        text: wordsList[Math.floor(Math.random() * wordsList.length)], 
+        x: Math.random() < 0.5 ? Math.random() * 20 + 5 : Math.random() * 20 + 75,
+        y: 0,
+        rotation: Math.random() * 360,
+        fontSize: Math.random() * 13 + 10,
+        opacity: 1,
+        color: ["#FFFFFF", "#FFD700", "#FFA500", "#FF69B4", "#90EE90", "#87CEEB"][Math.floor(Math.random() * 6)],
+        fontFamily: ["Arial", "Verdana", "Courier", "Georgia", "Times New Roman"][Math.floor(Math.random() * 5)]
+      };
+
+      // ✅ Ahora TypeScript sabe que prevWords es de tipo Word[]
+      setFallingWords((prevWords) => [...prevWords, newWord]);
+
+      setTimeout(() => {
+        setFallingWords((prevWords) => prevWords.filter(word => word.id !== newWord.id));
+
+        setGroundWords((prevWords) => {
+          const newHeight = prevWords.length * 5;
+          return newHeight < 600 ? [...prevWords, { ...newWord, y: newHeight }] : prevWords;
+        });
+      }, 4000);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-
-      {/* Título */}
+    <div className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 overflow-hidden">
       <motion.h1 
-        className="text-4xl font-bold mb-4"
-        animate={{ color: ["#FFD700", "#FFFFFF", "#FF69B4"], opacity: [0.8, 1, 0.8] }}
-        transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
+        className="text-5xl font-extrabold mb-6 tracking-wide drop-shadow-lg text-white"
+        animate={{ color: ["#FFB6C1", "#ADD8E6", "#E6E6FA", "#FAD02E", "#90EE90"], opacity: [0.8, 1, 0.8], scale: [1, 1.02, 1] }}
+        transition={{ duration: 6, repeat: Infinity, repeatType: "reverse" }}
       >
-        Chat con IA
+        ÁUREA 33 - IA INMERSIVA
       </motion.h1>
-
-      {/* Input para escribir mensaje */}
-      <div className="w-full max-w-2xl flex flex-col items-center">
-        <input 
-          type="text" 
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          placeholder="Escribe tu mensaje..."
-          className="w-full p-3 bg-gray-800 text-white rounded-md mb-4"
-        />
-        <button className="bg-cyan-500 px-5 py-3 rounded-md hover:bg-cyan-600 transition">
-          Enviar Mensaje
-        </button>
-      </div>
-
-      {/* Botones de navegación */}
-      <div className="mt-10 flex gap-4">
-        <motion.button className="btn-nav cyan" onClick={() => window.location.href = "/"}>
-          Home
-        </motion.button>
-        <motion.button className="btn-nav lime" onClick={() => window.location.href = "/image"}>
-          Generador de Imágenes
-        </motion.button>
-        <motion.button className="btn-nav red" onClick={() => window.location.href = "/video"}>
-          Generador de Video
-        </motion.button>
-      </div>
     </div>
   );
 }
