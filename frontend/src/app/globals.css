@@ -7,3 +7,40 @@ html, body {
   margin: 0;
   font-family: 'Inter', sans-serif;
 }
+.btn-nav {
+  padding: 12px 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-nav.cyan {
+  background: rgba(0, 255, 255, 0.2);
+  border: 2px solid cyan;
+  box-shadow: 0 0 10px cyan;
+}
+.btn-nav.cyan:hover {
+  box-shadow: 0 0 20px cyan;
+  scale: 1.1;
+}
+
+.btn-nav.lime {
+  background: rgba(50, 205, 50, 0.2);
+  border: 2px solid lime;
+  box-shadow: 0 0 10px lime;
+}
+.btn-nav.lime:hover {
+  box-shadow: 0 0 20px lime;
+  scale: 1.1;
+}
+
+.btn-nav.red {
+  background: rgba(255, 69, 0, 0.2);
+  border: 2px solid red;
+  box-shadow: 0 0 10px red;
+}
+.btn-nav.red:hover {
+  box-shadow: 0 0 20px red;
+  scale: 1.1;
+}
