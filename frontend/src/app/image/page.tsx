@@ -1,40 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from "react";
 
-export default function ImagePage() {
-  const [imagePrompt, setImagePrompt] = useState('');
+export default function ImageGenerator() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return; // ✅ Previene errores si canvas es null
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return; // ✅ Previene errores si el contexto es null
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Dibujo en el canvas (fondo blanco)
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      
-      <motion.h1 className="text-4xl font-bold mb-4">
-        Generador de Imágenes
-      </motion.h1>
-
-      <input 
-        type="text" 
-        value={imagePrompt}
-        onChange={(e) => setImagePrompt(e.target.value)}
-        placeholder="Describe la imagen..."
-        className="w-full p-3 bg-gray-800 text-white rounded-md mb-4"
-      />
-      <button className="bg-green-500 px-5 py-3 rounded-md hover:bg-green-600 transition">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold mb-6">Generador de Imágenes</h1>
+      <canvas ref={canvasRef} className="border border-gray-300" />
+      <button className="mt-4 bg-cyan-500 px-5 py-3 rounded-md hover:bg-cyan-600 transition">
         Generar Imagen
       </button>
-
-      <div className="mt-10 flex gap-4">
-        <motion.button className="btn-nav cyan" onClick={() => window.location.href = "/"}>
-          Home
-        </motion.button>
-        <motion.button className="btn-nav lime" onClick={() => window.location.href = "/chat"}>
-          Chat IA
-        </motion.button>
-        <motion.button className="btn-nav red" onClick={() => window.location.href = "/video"}>
-          Generador de Video
-        </motion.button>
-      </div>
     </div>
   );
 }
