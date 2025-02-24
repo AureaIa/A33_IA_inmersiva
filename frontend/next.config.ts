@@ -1,14 +1,17 @@
-import type { NextConfig } from "next";
+import { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  trailingSlash: true, // Permite rutas compatibles con Vercel
-  output: "standalone", // Asegura que Next.js maneje correctamente el despliegue
+  trailingSlash: true, // Permite rutas compatibles
+  output: "standalone", // Asegura que Next.js pueda desplegarse como un solo archivo
   eslint: {
-    ignoreDuringBuilds: true, // 🔥 Desactiva ESLint en Vercel para evitar bloqueos
+    ignoreDuringBuilds: true, // 🔥 Desactiva ESLint en producción
   },
   experimental: {
-    scrollRestoration: true, // Mejora la experiencia de usuario
+    scrollRestoration: true, // Mejora la experiencia de navegación
+  },
+  env: {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
 };
 

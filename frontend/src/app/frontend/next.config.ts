@@ -1,11 +1,18 @@
-import type { NextConfig } from "next";
+import 'dotenv/config';
+import { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  trailingSlash: true, // Permite que las rutas sean compatibles con Vercel
-  output: "standalone", // Asegura que Next.js maneje correctamente el despliegue
+  trailingSlash: true,
+  output: "standalone",
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   experimental: {
-    scrollRestoration: true, // Mejora la experiencia de usuario
+    scrollRestoration: true,
+  },
+  env: {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,  // Carga la variable correctamente
   },
 };
 
