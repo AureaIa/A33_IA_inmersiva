@@ -1,4 +1,4 @@
-"use client"; // Asegura que el código se ejecute en el cliente
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -9,18 +9,18 @@ export default function ChatPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Verifica si `fetch` está disponible en el cliente
-        if (typeof window !== "undefined") {
-          const response = await fetch("http://localhost:4000/api");
-          if (!response.ok) throw new Error("Error en la API");
+        console.log("Intentando conectar con el backend...");
+        
+        const response = await fetch("http://localhost:4000/api"); // Asegura que apunta bien
+        if (!response.ok) throw new Error(`Error en la API: ${response.statusText}`);
 
-          const result = await response.json();
-          setData(result);
-        }
+        const result = await response.json();
+        console.log("Datos recibidos:", result);
+        setData(result);
       } catch (error) {
         console.error("Error al conectar con la API:", error);
       } finally {
-        setLoading(false); // Desactiva el estado de carga
+        setLoading(false);
       }
     }
 
