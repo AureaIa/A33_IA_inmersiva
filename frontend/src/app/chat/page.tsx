@@ -1,61 +1,49 @@
-'use client';
+"use client"; // Asegura que el código se ejecute en el cliente
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from "react";
 
 export default function ChatPage() {
-  const [userInput, setUserInput] = useState('');
+  const [data, setData] = useState<{ message: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Verifica si `fetch` está disponible en el cliente
+        if (typeof window !== "undefined") {
+          const response = await fetch("http://localhost:4000/api");
+          if (!response.ok) throw new Error("Error en la API");
+
+          const result = await response.json();
+          setData(result);
+        }
+      } catch (error) {
+        console.error("Error al conectar con la API:", error);
+      } finally {
+        setLoading(false); // Desactiva el estado de carga
+      }
+    }
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      {/* Título principal */}
-      <motion.h1 
-        className="text-4xl font-bold mb-6 tracking-wide drop-shadow-lg text-white"
-        animate={{ opacity: [0.8, 1, 0.8], scale: [1, 1.02, 1] }}
-        transition={{ duration: 6, repeat: Infinity, repeatType: "reverse" }}
-      >
-        Chat con IA
-      </motion.h1>
-
-      {/* Input para ingresar el mensaje */}
-      <input
-        type="text"
-        value={userInput}
-        onChange={(e) => setUserInput(e.target.value)}
-        placeholder="Escribe tu mensaje..."
-        className="w-full max-w-lg p-3 bg-gray-800 text-white rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-      />
-
-      {/* Botón para enviar mensaje */}
-      <button 
-        className="bg-cyan-500 px-5 py-3 rounded-md hover:bg-cyan-600 transition"
-      >
-        Enviar
-      </button>
-
-      {/* Botones de navegación */}
-      <div className="mt-10 flex gap-4">
-        <motion.button 
-          className="btn-nav cyan"
-          onClick={() => window.location.href = "/"}
-        >
-          Home
-        </motion.button>
-
-        <motion.button 
-          className="btn-nav lime"
-          onClick={() => window.location.href = "/image"}
-        >
-          Generador de Imágenes
-        </motion.button>
-
-        <motion.button 
-          className="btn-nav red"
-          onClick={() => window.location.href = "/video"}
-        >
-          Generador de Video
-        </motion.button>
-      </div>
+    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+      <h1>Chat Page</h1>
+      
+      {loading ? (
+        <p>Cargando datos del backend...</p>
+      ) : data ? (
+        <>
+          <p>Datos del Backend:</p>
+          <pre style={{ background: "#f4f4f4", padding: "10px", borderRadius: "5px" }}>
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </>
+      ) : (
+        <p>No se pudieron obtener datos del backend.</p>
+      )}
     </div>
   );
 }
+
