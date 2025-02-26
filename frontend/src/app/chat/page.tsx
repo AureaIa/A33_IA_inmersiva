@@ -6,7 +6,7 @@ export default function ChatPage() {
   const [data, setData] = useState<{ message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
-  const [response, setResponse] = useState<string | null>(null); // Respuesta de la IA
+  const [history, setHistory] = useState<{ user: string; bot: string }[]>([]); // Guardar la conversación
 
   useEffect(() => {
     async function fetchData() {
@@ -47,7 +47,9 @@ export default function ChatPage() {
 
       const result = await response.json();
       console.log("✅ Respuesta de la IA:", result);
-      setResponse(result.reply); // Guardar la respuesta en el estado
+
+      // Guardar la conversación en el estado
+      setHistory(result.history);
 
       setInput(""); // Limpiar input después de enviar
     } catch (error) {
@@ -130,20 +132,24 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* 🔹 Aquí mostramos la respuesta de la IA */}
-      {response && (
-        <div style={{
-          marginTop: "20px",
-          backgroundColor: "#1e293b",
-          padding: "10px",
-          borderRadius: "5px",
-          width: "50%",
-          textAlign: "center",
-          fontSize: "18px"
-        }}>
-          🤖 <strong>Respuesta de la IA:</strong> {response}
-        </div>
-      )}
+      {/* 🔹 Mostramos la conversación completa */}
+      <div style={{
+        marginTop: "20px",
+        backgroundColor: "#1e293b",
+        padding: "10px",
+        borderRadius: "5px",
+        width: "50%",
+        textAlign: "left",
+        fontSize: "18px"
+      }}>
+        <h2>🗨 Historial del Chat</h2>
+        {history.map((msg, index) => (
+          <p key={index}>
+            <strong>🧑‍💻 Tú:</strong> {msg.user} <br />
+            <strong>🤖 IA:</strong> {msg.bot}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
@@ -162,4 +168,3 @@ const buttonStyle = (color: string, isRed?: boolean) => ({
   transition: "all 0.3s ease",
   textTransform: "uppercase",
 });
-
