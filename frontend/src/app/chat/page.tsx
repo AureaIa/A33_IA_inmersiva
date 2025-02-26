@@ -6,6 +6,7 @@ export default function ChatPage() {
   const [data, setData] = useState<{ message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
+  const [response, setResponse] = useState<string | null>(null); // Respuesta de la IA
 
   useEffect(() => {
     async function fetchData() {
@@ -28,9 +29,30 @@ export default function ChatPage() {
     fetchData();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 🔹 Manejar el envío de mensajes
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🔵 Mensaje enviado:", input);
+    if (!input.trim()) return;
+
+    try {
+      console.log("📩 Enviando mensaje:", input);
+
+      const response = await fetch("http://localhost:4000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+
+      if (!response.ok) throw new Error("Error al enviar mensaje");
+
+      const result = await response.json();
+      console.log("✅ Respuesta de la IA:", result);
+      setResponse(result.reply); // Guardar la respuesta en el estado
+
+      setInput(""); // Limpiar input después de enviar
+    } catch (error) {
+      console.error("❌ Error en la API:", error);
+    }
   };
 
   return (
@@ -46,7 +68,7 @@ export default function ChatPage() {
       textAlign: "center"
     }}>
       <h1 style={{ fontSize: "28px", marginBottom: "20px" }}>Chat con IA</h1>
-      
+
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
         <input
           type="text"
@@ -107,6 +129,21 @@ export default function ChatPage() {
           <p style={{ color: "#ef4444", fontSize: "18px" }}>⚠ No se pudieron obtener datos.</p>
         )}
       </div>
+
+      {/* 🔹 Aquí mostramos la respuesta de la IA */}
+      {response && (
+        <div style={{
+          marginTop: "20px",
+          backgroundColor: "#1e293b",
+          padding: "10px",
+          borderRadius: "5px",
+          width: "50%",
+          textAlign: "center",
+          fontSize: "18px"
+        }}>
+          🤖 <strong>Respuesta de la IA:</strong> {response}
+        </div>
+      )}
     </div>
   );
 }
