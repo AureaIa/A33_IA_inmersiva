@@ -1,10 +1,11 @@
-"use client";  // Asegura que el código se ejecute en el cliente
+"use client";
 
 import { useEffect, useState } from "react";
 
 export default function ChatPage() {
   const [data, setData] = useState<{ message: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [input, setInput] = useState("");
 
   useEffect(() => {
     async function fetchData() {
@@ -27,21 +28,70 @@ export default function ChatPage() {
     fetchData();
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("🔵 Mensaje enviado:", input);
+  };
+
   return (
     <div style={{
-      padding: "20px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "100vh",
+      backgroundColor: "#000",
+      color: "#fff",
       fontFamily: "Arial, sans-serif",
-      backgroundColor: "#0f172a",
-      color: "#f8fafc",
-      minHeight: "100vh"
+      textAlign: "center"
     }}>
-      <h1 style={{ fontSize: "24px", marginBottom: "10px" }}>Chat Page</h1>
+      <h1 style={{ fontSize: "28px", marginBottom: "20px" }}>Chat con IA</h1>
       
-      {loading ? (
-        <p style={{ fontSize: "18px", color: "#facc15" }}>Cargando datos del backend...</p>
-      ) : data ? (
-        <>
-          <p style={{ fontSize: "18px", marginBottom: "10px" }}>📡 Datos del Backend:</p>
+      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Escribe tu mensaje..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          style={{
+            padding: "10px",
+            fontSize: "16px",
+            width: "300px",
+            borderRadius: "5px",
+            border: "none",
+            textAlign: "center",
+            backgroundColor: "#1e293b",
+            color: "#fff"
+          }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: "10px 20px",
+            fontSize: "16px",
+            marginLeft: "10px",
+            borderRadius: "5px",
+            border: "none",
+            backgroundColor: "#00aaff",
+            color: "#fff",
+            cursor: "pointer"
+          }}
+        >
+          Enviar
+        </button>
+      </form>
+
+      <div style={{ display: "flex", gap: "15px" }}>
+        <button style={buttonStyle("#00ffcc")}>HOME</button>
+        <button style={buttonStyle("#00ff00")}>GENERADOR DE IMÁGENES</button>
+        <button style={buttonStyle("#ff0000", true)}>GENERADOR DE VIDEO</button>
+      </div>
+
+      <div style={{ marginTop: "20px", width: "80%" }}>
+        <h2 style={{ fontSize: "20px", marginBottom: "10px" }}>📡 Datos del Backend:</h2>
+        {loading ? (
+          <p style={{ color: "#facc15", fontSize: "18px" }}>Cargando datos...</p>
+        ) : data ? (
           <pre style={{
             background: "#1e293b",
             color: "#f8fafc",
@@ -53,10 +103,26 @@ export default function ChatPage() {
           }}>
             {JSON.stringify(data, null, 2)}
           </pre>
-        </>
-      ) : (
-        <p style={{ color: "#ef4444", fontSize: "18px" }}>⚠ No se pudieron obtener datos del backend.</p>
-      )}
+        ) : (
+          <p style={{ color: "#ef4444", fontSize: "18px" }}>⚠ No se pudieron obtener datos.</p>
+        )}
+      </div>
     </div>
   );
 }
+
+// 🔹 Función para los estilos de los botones
+const buttonStyle = (color: string, isRed?: boolean) => ({
+  padding: "10px 15px",
+  fontSize: "16px",
+  fontWeight: "bold",
+  borderRadius: "5px",
+  border: isRed ? "2px solid red" : "2px solid " + color,
+  backgroundColor: "transparent",
+  color: color,
+  cursor: "pointer",
+  boxShadow: isRed ? "0px 0px 10px red" : "0px 0px 10px " + color,
+  transition: "all 0.3s ease",
+  textTransform: "uppercase",
+});
+
