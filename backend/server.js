@@ -1,49 +1,40 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { OpenAI } = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors());
 app.use(express.json());
 
-let chatHistory = [];
+// Configuración de OpenAI
+const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
+// Endpoint del chat con OpenAI
 app.post("/api/chat", async (req, res) => {
-  try {
     const { message } = req.body;
+    if (!message) return res.status(400).json({ error: "Mensaje vacío" });
 
-    if (!message) {
-      return res.status(400).json({ error: "Mensaje vacío" });
+    try {
+        const response = await openai.createChatCompletion({
+            model: "gpt-4-turbo",
+            messages: [{ role: "system", content: "Eres AUREA 33 IA Inmersiva, un asistente experto en todo tipo de temas." },
+                       { role: "user", content: message }],
+            max_tokens: 200,
+        });
+
+        res.json({ reply: response.data.choices[0].message.content });
+    } catch (error) {
+        console.error("Error con OpenAI:", error);
+        res.status(500).json({ error: "Error al procesar la solicitud con OpenAI" });
     }
-
-    // Construcción del historial de chat
-    chatHistory.push({ role: "user", content: message });
-
-    // Llamar a OpenAI (GPT-4 Turbo o la versión que tengas)
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo", // Cambia a "gpt-3.5-turbo" si no tienes acceso a GPT-4
-      messages: [
-        { role: "system", content: "Eres un asistente útil y conversacional llamado AUREA 33 IA Inmersiva." },
-        ...chatHistory, // Enviar historial de conversación
-      ],
-      max_tokens: 200,
-    });
-
-    const reply = response.choices[0]?.message?.content || "No entendí, ¿puedes reformularlo?";
-
-    chatHistory.push({ role: "assistant", content: reply });
-
-    res.json({ reply });
-  } catch (error) {
-    console.error("Error en OpenAI:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
