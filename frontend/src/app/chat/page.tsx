@@ -3,39 +3,16 @@
 import { useEffect, useState } from "react";
 
 export default function ChatPage() {
-  const [data, setData] = useState<{ message: string } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
-  const [history, setHistory] = useState<{ user: string; bot: string }[]>([]); // Guardar la conversación
+  const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        console.log("🔄 Intentando conectar con el backend...");
-
-        const response = await fetch("http://localhost:4000/api");
-        if (!response.ok) throw new Error(`Error en la API: ${response.statusText}`);
-
-        const result = await response.json();
-        console.log("✅ Datos recibidos:", result);
-        setData(result);
-      } catch (error) {
-        console.error("❌ Error al conectar con la API:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
-
-  // 🔹 Manejar el envío de mensajes
+  // 🔹 Enviar mensaje al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     try {
-      console.log("📩 Enviando mensaje:", input);
+      setHistory([...history, { role: "user", content: input }]); // Añadir mensaje del usuario
 
       const response = await fetch("http://localhost:4000/api/chat", {
         method: "POST",
@@ -46,12 +23,9 @@ export default function ChatPage() {
       if (!response.ok) throw new Error("Error al enviar mensaje");
 
       const result = await response.json();
-      console.log("✅ Respuesta de la IA:", result);
+      setHistory(result.history); // Actualizar historial completo con la respuesta de IA
 
-      // Guardar la conversación en el estado
-      setHistory(result.history);
-
-      setInput(""); // Limpiar input después de enviar
+      setInput(""); // Limpiar input
     } catch (error) {
       console.error("❌ Error en la API:", error);
     }
@@ -105,34 +79,6 @@ export default function ChatPage() {
         </button>
       </form>
 
-      <div style={{ display: "flex", gap: "15px" }}>
-        <button style={buttonStyle("#00ffcc")}>HOME</button>
-        <button style={buttonStyle("#00ff00")}>GENERADOR DE IMÁGENES</button>
-        <button style={buttonStyle("#ff0000", true)}>GENERADOR DE VIDEO</button>
-      </div>
-
-      <div style={{ marginTop: "20px", width: "80%" }}>
-        <h2 style={{ fontSize: "20px", marginBottom: "10px" }}>📡 Datos del Backend:</h2>
-        {loading ? (
-          <p style={{ color: "#facc15", fontSize: "18px" }}>Cargando datos...</p>
-        ) : data ? (
-          <pre style={{
-            background: "#1e293b",
-            color: "#f8fafc",
-            padding: "15px",
-            borderRadius: "5px",
-            fontFamily: "monospace",
-            overflowX: "auto",
-            fontSize: "16px"
-          }}>
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        ) : (
-          <p style={{ color: "#ef4444", fontSize: "18px" }}>⚠ No se pudieron obtener datos.</p>
-        )}
-      </div>
-
-      {/* 🔹 Mostramos la conversación completa */}
       <div style={{
         marginTop: "20px",
         backgroundColor: "#1e293b",
@@ -144,27 +90,11 @@ export default function ChatPage() {
       }}>
         <h2>🗨 Historial del Chat</h2>
         {history.map((msg, index) => (
-          <p key={index}>
-            <strong>🧑‍💻 Tú:</strong> {msg.user} <br />
-            <strong>🤖 IA:</strong> {msg.bot}
+          <p key={index} style={{ marginBottom: "10px", fontSize: "16px" }}>
+            <strong>{msg.role === "user" ? "🧑‍💻 Tú:" : "🤖 IA:"}</strong> {msg.content}
           </p>
         ))}
       </div>
     </div>
   );
 }
-
-// 🔹 Función para los estilos de los botones
-const buttonStyle = (color: string, isRed?: boolean) => ({
-  padding: "10px 15px",
-  fontSize: "16px",
-  fontWeight: "bold",
-  borderRadius: "5px",
-  border: isRed ? "2px solid red" : "2px solid " + color,
-  backgroundColor: "transparent",
-  color: color,
-  cursor: "pointer",
-  boxShadow: isRed ? "0px 0px 10px red" : "0px 0px 10px " + color,
-  transition: "all 0.3s ease",
-  textTransform: "uppercase",
-});
