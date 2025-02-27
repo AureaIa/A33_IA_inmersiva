@@ -1,56 +1,49 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
+const { OpenAI } = require("openai");
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Middleware
-app.use(cors({ origin: "http://localhost:3000" })); // Permite peticiones desde el frontend
-app.use(bodyParser.json()); // Parsea JSON en las peticiones
+app.use(cors({ origin: "http://localhost:3000" }));
+app.use(express.json());
 
-// Mensajes previos para mantener el contexto de la conversación
 let chatHistory = [];
 
-// Endpoint de prueba para verificar que el backend funciona
-app.get("/status", (req, res) => {
-    res.json({ status: "Backend activo", port: PORT });
-});
-
-// Endpoint principal de la API
-app.post("/api/chat", (req, res) => {
-    const { message } = req.body; // Extrae el mensaje del usuario
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
 
     if (!message) {
-        return res.status(400).json({ error: "Mensaje vacío, envía algo." });
+      return res.status(400).json({ error: "Mensaje vacío" });
     }
 
-    // Agrega el mensaje del usuario al historial del chat
+    // Construcción del historial de chat
     chatHistory.push({ role: "user", content: message });
 
-    // Simula una respuesta más natural de la IA
-    let reply = generateAIResponse(message);
+    // Llamar a OpenAI (GPT-4 Turbo o la versión que tengas)
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo", // Cambia a "gpt-3.5-turbo" si no tienes acceso a GPT-4
+      messages: [
+        { role: "system", content: "Eres un asistente útil y conversacional llamado AUREA 33 IA Inmersiva." },
+        ...chatHistory, // Enviar historial de conversación
+      ],
+      max_tokens: 200,
+    });
 
-    // Agrega la respuesta de la IA al historial
-    chatHistory.push({ role: "ia", content: reply });
+    const reply = response.choices[0]?.message?.content || "No entendí, ¿puedes reformularlo?";
+
+    chatHistory.push({ role: "assistant", content: reply });
 
     res.json({ reply });
+  } catch (error) {
+    console.error("Error en OpenAI:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 });
 
-// Función que genera respuestas dinámicas
-function generateAIResponse(input) {
-    input = input.toLowerCase().trim();
-
-    if (input.includes("hola")) return "¡Hola! ¿Cómo puedo ayudarte hoy?";
-    if (input.includes("cómo estás")) return "Estoy en línea y listo para ayudarte 😊.";
-    if (input.includes("quién eres")) return "Soy AUREA 33 IA Inmersiva, tu asistente de inteligencia artificial.";
-    if (input.includes("adiós") || input.includes("bye")) return "¡Hasta luego! Espero verte pronto. 👋";
-    
-    // Respuesta por defecto
-    return `Recibí tu mensaje: "${input}". ¿Puedes darme más detalles?`;
-}
-
-// Iniciar el servidor
 app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });
