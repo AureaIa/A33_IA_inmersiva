@@ -18,6 +18,7 @@ export default function ChatPage() {
             });
 
             const data = await response.json();
+
             setHistory([
                 ...history,
                 { role: "user", content: input },
