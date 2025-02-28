@@ -5,14 +5,20 @@ import { useState } from "react";
 export default function ChatPage() {
     const [input, setInput] = useState("");
     const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
+    const [isTyping, setIsTyping] = useState(false);
+
+    // Definir la URL del backend desde variable de entorno o fallback a localhost
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        setHistory([...history, { role: "user", content: input }]);
+        // Agregar mensaje del usuario al historial
+        setHistory(prev => [...prev, { role: "user", content: input }]);
+        setIsTyping(true);
 
         try {
-            const response = await fetch("http://localhost:4000/api/chat", {
+            const response = await fetch(`${BACKEND_URL}/api/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: input }),
@@ -21,10 +27,12 @@ export default function ChatPage() {
             if (!response.ok) throw new Error("Error en la API");
 
             const data = await response.json();
-            setHistory([...history, { role: "user", content: input }, { role: "ia", content: data.reply }]);
+            setHistory(prev => [...prev, { role: "ia", content: data.reply }]);
         } catch (error) {
             console.error("Error al conectar con la API:", error);
-            setHistory([...history, { role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." }]);
+            setHistory(prev => [...prev, { role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." }]);
+        } finally {
+            setIsTyping(false);
         }
 
         setInput("");
@@ -49,6 +57,7 @@ export default function ChatPage() {
                         {msg.role === "user" ? "🧑‍💻" : "🤖"} <b>{msg.role.toUpperCase()}:</b> {msg.content}
                     </p>
                 ))}
+                {isTyping && <p>🤖 <b>IA:</b> Escribiendo...</p>}
             </div>
         </div>
     );
