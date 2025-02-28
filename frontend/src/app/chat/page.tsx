@@ -7,13 +7,13 @@ export default function ChatPage() {
     const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
     const [isTyping, setIsTyping] = useState(false);
 
-    // Definir la URL del backend desde variable de entorno o fallback a localhost
+    // URL del backend desde variable de entorno o fallback a localhost
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        // Agregar mensaje del usuario al historial
+        // Agregar mensaje del usuario al historial y activar estado de escritura
         setHistory(prev => [...prev, { role: "user", content: input }]);
         setIsTyping(true);
 
@@ -24,7 +24,7 @@ export default function ChatPage() {
                 body: JSON.stringify({ message: input }),
             });
 
-            if (!response.ok) throw new Error("Error en la API");
+            if (!response.ok) throw new Error(`Error en la API: ${response.statusText}`);
 
             const data = await response.json();
             setHistory(prev => [...prev, { role: "ia", content: data.reply }]);
@@ -62,4 +62,3 @@ export default function ChatPage() {
         </div>
     );
 }
-
