@@ -1,30 +1,20 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function ChatPage() {
     const [input, setInput] = useState("");
-    const [history, setHistory] = useState<{ title: string; messages: { role: string; content: string }[] }[]>([]);
-    const [activeChat, setActiveChat] = useState<number | null>(null);
+    const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
+    const [chats, setChats] = useState<{ title: string; messages: { role: string; content: string }[] }[]>([]);
     const [isTyping, setIsTyping] = useState(false);
+    const [currentChat, setCurrentChat] = useState<number | null>(null);
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
+        setHistory(prev => [...prev, { role: "user", content: input }]);
         setIsTyping(true);
 
-        let newHistory = [...history];
-        if (activeChat === null) {
-            newHistory.push({ title: input.slice(0, 20), messages: [{ role: "user", content: input }] });
-            setActiveChat(newHistory.length - 1);
-        } else {
-            newHistory[activeChat].messages.push({ role: "user", content: input });
-        }
-
-        setHistory(newHistory);
-        
         try {
             const response = await fetch(`${BACKEND_URL}/api/chat`, {
                 method: "POST",
@@ -35,12 +25,10 @@ export default function ChatPage() {
             if (!response.ok) throw new Error("Error en la API");
 
             const data = await response.json();
-            newHistory[activeChat ?? newHistory.length - 1].messages.push({ role: "ia", content: formatMessage(data.reply) });
-            setHistory(newHistory);
+            setHistory(prev => [...prev, { role: "ia", content: data.reply }]);
         } catch (error) {
             console.error("Error al conectar con la API:", error);
-            newHistory[activeChat ?? newHistory.length - 1].messages.push({ role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." });
-            setHistory(newHistory);
+            setHistory(prev => [...prev, { role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." }]);
         } finally {
             setIsTyping(false);
         }
@@ -48,48 +36,56 @@ export default function ChatPage() {
         setInput("");
     };
 
-    const formatMessage = (message: string) => {
-        return message.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
+    const createNewChat = () => {
+        const title = history.length > 0 ? history[0].content.slice(0, 20) : "Nuevo Chat";
+        setChats([...chats, { title, messages: history }]);
+        setHistory([]);
     };
 
     return (
-        <div style={{ display: "flex", height: "100vh", backgroundColor: "#111", color: "white" }}>
-            {/* Historial de Chats */}
-            <div style={{ width: "20%", backgroundColor: "#222", padding: "15px" }}>
-                <h2>📜 Historial</h2>
-                <ul style={{ listStyle: "none", padding: 0 }}>
-                    {history.map((chat, index) => (
-                        <li key={index} onClick={() => setActiveChat(index)} style={{ cursor: "pointer", padding: "10px", background: activeChat === index ? "#333" : "none" }}>
+        <div className="flex min-h-screen bg-gray-900 text-white">
+            {/* Sidebar */}
+            <div className="w-1/4 bg-gray-800 p-4">
+                <h2 className="text-xl font-bold mb-4">📜 Historial</h2>
+                <button className="bg-yellow-500 text-black p-2 rounded mb-4 w-full" onClick={createNewChat}>Nuevo Chat</button>
+                <ul>
+                    {chats.map((chat, index) => (
+                        <li key={index} className="cursor-pointer p-2 hover:bg-gray-700 rounded">
                             {chat.title}
                         </li>
                     ))}
                 </ul>
             </div>
 
-            {/* Chat Principal */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <h1 style={{ textAlign: "center", padding: "15px", backgroundColor: "#333" }}>✨ Aurea 33 Chat Inmersivo ✨</h1>
-                <div style={{ flex: 1, padding: "15px", overflowY: "auto" }}>
-                    {activeChat !== null && history[activeChat].messages.map((msg, index) => (
-                        <p key={index} dangerouslySetInnerHTML={{ __html: msg.role === "user" ? `🧑‍💻 <b>USER:</b> ${msg.content}` : `🤖 <b>IA:</b> ${msg.content}` }}></p>
+            {/* Chat Section */}
+            <div className="w-2/4 flex flex-col p-4">
+                <h1 className="text-center text-2xl font-bold">✨ Aurea 33 Chat Inmersivo ✨</h1>
+                <div className="flex-1 bg-gray-700 p-4 rounded mt-4 overflow-auto">
+                    {history.map((msg, index) => (
+                        <p key={index} className={msg.role === "user" ? "text-blue-400" : "text-green-400"}>
+                            {msg.role === "user" ? "🧑‍💻" : "🤖"} <b>{msg.role.toUpperCase()}:</b> {msg.content}
+                        </p>
                     ))}
-                    {isTyping && <p>🤖 <b>IA:</b> Escribiendo...</p>}
+                    {isTyping && <p className="text-yellow-400">🤖 <b>IA:</b> Escribiendo...</p>}
                 </div>
-                
-                {/* Barra de entrada */}
-                <div style={{ display: "flex", padding: "10px", backgroundColor: "#222" }}>
+                <div className="flex mt-4">
                     <input
-                        style={{ flex: 1, padding: "10px", borderRadius: "5px" }}
+                        className="flex-1 p-2 bg-white text-black rounded"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Escribe tu mensaje..."
                     />
-                    <button onClick={sendMessage} style={{ marginLeft: "10px", padding: "10px", backgroundColor: "yellow", border: "none", borderRadius: "5px" }}>Enviar</button>
+                    <button className="bg-yellow-500 text-black p-2 rounded ml-2" onClick={sendMessage}>Enviar</button>
                 </div>
-                <p style={{ textAlign: "center", fontSize: "12px", padding: "5px", backgroundColor: "#111" }}>
-                    AUREA33 IA puede cometer errores. Considera verificar la veracidad de la información.<br />
-                    IA creada por E.C.S.S. - HECHO EN MÉXICO.
-                </p>
+                <p className="text-center text-xs mt-2">AUREA33 IA puede cometer errores. Considera verificar la veracidad de la información.<br/> IA creada por E.C.S.S. - HECHO EN MÉXICO.</p>
+            </div>
+
+            {/* Reference Section */}
+            <div className="w-1/4 bg-gray-800 p-4 flex flex-col items-center">
+                <h2 className="text-lg font-bold mb-2">🌎 Referencias</h2>
+                <div className="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center">
+                    🔎 Buscando información...
+                </div>
             </div>
         </div>
     );
