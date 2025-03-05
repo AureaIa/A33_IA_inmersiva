@@ -1,19 +1,22 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 
 export default function ChatPage() {
     const [input, setInput] = useState("");
     const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
-    const [chats, setChats] = useState<{ title: string; messages: { role: string; content: string }[] }[]>([]);
     const [isTyping, setIsTyping] = useState(false);
-    const [currentChat, setCurrentChat] = useState<number | null>(null);
+    const chatEndRef = useRef<HTMLDivElement>(null);
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
+    // Función para enviar mensaje
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        setHistory(prev => [...prev, { role: "user", content: input }]);
+        setHistory(prev => [...(prev || []), { role: "user", content: input }]);
         setIsTyping(true);
+        setInput("");
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/chat`, {
@@ -25,67 +28,74 @@ export default function ChatPage() {
             if (!response.ok) throw new Error("Error en la API");
 
             const data = await response.json();
-            setHistory(prev => [...prev, { role: "ia", content: data.reply }]);
+            setHistory(prev => [...(prev || []), { role: "ia", content: data.reply || "⚠️ No se obtuvo respuesta." }]);
         } catch (error) {
             console.error("Error al conectar con la API:", error);
-            setHistory(prev => [...prev, { role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." }]);
+            setHistory(prev => [...(prev || []), { role: "ia", content: "⚠️ Error al obtener respuesta. Inténtalo de nuevo." }]);
         } finally {
             setIsTyping(false);
         }
-
-        setInput("");
     };
 
-    const createNewChat = () => {
-        const title = history.length > 0 ? history[0].content.slice(0, 20) : "Nuevo Chat";
-        setChats([...chats, { title, messages: history }]);
-        setHistory([]);
-    };
+    // Hacer scroll automático al final del chat cuando cambie el historial
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [history]);
 
     return (
-        <div className="flex min-h-screen bg-gray-900 text-white">
-            {/* Sidebar */}
-            <div className="w-1/4 bg-gray-800 p-4">
-                <h2 className="text-xl font-bold mb-4">📜 Historial</h2>
-                <button className="bg-yellow-500 text-black p-2 rounded mb-4 w-full" onClick={createNewChat}>Nuevo Chat</button>
-                <ul>
-                    {chats.map((chat, index) => (
-                        <li key={index} className="cursor-pointer p-2 hover:bg-gray-700 rounded">
-                            {chat.title}
-                        </li>
-                    ))}
-                </ul>
+        <div style={{ backgroundColor: "#1E1E2E", color: "#E0E0E0", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            {/* Encabezado */}
+            <div style={{ textAlign: "center", padding: "10px", fontSize: "20px", fontWeight: "bold", backgroundColor: "#2A2D3E" }}>
+                ✨ Aurea 33 Chat Inmersivo ✨
             </div>
 
-            {/* Chat Section */}
-            <div className="w-2/4 flex flex-col p-4">
-                <h1 className="text-center text-2xl font-bold">✨ Aurea 33 Chat Inmersivo ✨</h1>
-                <div className="flex-1 bg-gray-700 p-4 rounded mt-4 overflow-auto">
+            {/* Contenedor del chat */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "row" }}>
+                {/* Historial de chats (columna izquierda) */}
+                <div style={{ width: "20%", backgroundColor: "#16171F", padding: "10px", overflowY: "auto" }}>
+                    <h3 style={{ margin: "0 0 10px", color: "#FFD700" }}>📜 Historial</h3>
+                    {history.length === 0 ? (
+                        <p style={{ color: "#888" }}>No hay chats previos</p>
+                    ) : (
+                        history.map((msg, index) => (
+                            <p key={index} style={{ fontSize: "14px", marginBottom: "5px" }}>
+                                {msg.role === "user" ? "🧑‍💻" : "🤖"} <b>{msg.role.toUpperCase()}:</b> {msg.content.slice(0, 30)}...
+                            </p>
+                        ))
+                    )}
+                </div>
+
+                {/* Área de conversación (columna central) */}
+                <div style={{ flex: 1, padding: "20px", overflowY: "auto", backgroundColor: "#282A36", borderRadius: "10px" }}>
                     {history.map((msg, index) => (
-                        <p key={index} className={msg.role === "user" ? "text-blue-400" : "text-green-400"}>
+                        <p key={index} style={{ whiteSpace: "pre-line", padding: "8px", borderRadius: "5px", backgroundColor: msg.role === "user" ? "#3A3D4E" : "#2E3440" }}>
                             {msg.role === "user" ? "🧑‍💻" : "🤖"} <b>{msg.role.toUpperCase()}:</b> {msg.content}
                         </p>
                     ))}
-                    {isTyping && <p className="text-yellow-400">🤖 <b>IA:</b> Escribiendo...</p>}
+                    {isTyping && <p>🤖 <b>IA:</b> Escribiendo...</p>}
+                    <div ref={chatEndRef} />
                 </div>
-                <div className="flex mt-4">
-                    <input
-                        className="flex-1 p-2 bg-white text-black rounded"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Escribe tu mensaje..."
-                    />
-                    <button className="bg-yellow-500 text-black p-2 rounded ml-2" onClick={sendMessage}>Enviar</button>
-                </div>
-                <p className="text-center text-xs mt-2">AUREA33 IA puede cometer errores. Considera verificar la veracidad de la información.<br/> IA creada por E.C.S.S. - HECHO EN MÉXICO.</p>
             </div>
 
-            {/* Reference Section */}
-            <div className="w-1/4 bg-gray-800 p-4 flex flex-col items-center">
-                <h2 className="text-lg font-bold mb-2">🌎 Referencias</h2>
-                <div className="w-full h-40 bg-gray-700 animate-pulse flex items-center justify-center">
-                    🔎 Buscando información...
-                </div>
+            {/* Barra de entrada de texto */}
+            <div style={{ display: "flex", padding: "10px", backgroundColor: "#2A2D3E", borderTop: "1px solid #444" }}>
+                <input
+                    style={{ flex: 1, padding: "10px", borderRadius: "5px", border: "none", outline: "none", fontSize: "16px", backgroundColor: "#E0E0E0", color: "#000" }}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Escribe tu mensaje..."
+                />
+                <button
+                    onClick={sendMessage}
+                    style={{ marginLeft: "10px", padding: "10px 15px", borderRadius: "5px", border: "none", backgroundColor: "#FFD700", color: "#000", fontSize: "16px", cursor: "pointer" }}>
+                    Enviar
+                </button>
+            </div>
+
+            {/* Footer */}
+            <div style={{ textAlign: "center", padding: "10px", fontSize: "12px", backgroundColor: "#16171F", color: "#888" }}>
+                AUREA33 IA puede cometer errores. Considera verificar la veracidad de la información.  
+                <br /> IA creada por **E.C.S.S.** - **HECHO EN MÉXICO.**
             </div>
         </div>
     );
